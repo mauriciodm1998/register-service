@@ -2,9 +2,9 @@ package config
 
 import (
 	"flag"
-	"log"
 
 	"github.com/notnull-co/cfg"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -18,6 +18,9 @@ type config struct {
 	Database struct {
 		ConnectionString string `cfg:"connection_string"`
 	} `cfg:"database"`
+	Token struct {
+		Key string `cfg:"key"`
+	} `cfg:"token"`
 }
 
 func Get() config {
@@ -37,6 +40,6 @@ func parse(dirs ...string) {
 	if err := cfg.Load(&configuration,
 		cfg.Dirs(dirs...),
 	); err != nil {
-		log.Panic(err)
+		log.Panic().Err(err)
 	}
 }

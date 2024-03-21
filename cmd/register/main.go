@@ -13,12 +13,15 @@ import (
 func main() {
 	config.ParseFromFlags()
 
-	now := time.Now()
-	repository.New().Create(context.Background(), domain.ClockInRegister{
+	now := time.Now().UTC()
+	rep := repository.New()
+	rep.Create(context.Background(), domain.ClockInRegister{
 		Id:        int(uuid.New().ID()),
 		UserId:    int(uuid.New().ID()),
-		Date:      now.Format("2006-01-02"),
-		Time:      now.Format("15:04"),
-		CreatedAt: now,
+		Date:      time.Now().UTC().Truncate(24 * time.Hour),
+		Time:      time.Now().UTC(),
+		CreatedAt: now.UTC(),
 	})
+
+	rep.GetMonthAppointments(context.Background(), 475075755, time.Now().UTC())
 }

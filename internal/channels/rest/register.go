@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"register-service/internal/service"
+	"register-service/internal/token"
 
 	"github.com/labstack/echo/v4"
 )
@@ -20,15 +21,14 @@ func NewRegisterChannel() Register {
 }
 
 func (r *register) ClockIn(c echo.Context) error {
-	var registerRequest RegisterRequest
-
-	if err := c.Bind(&registerRequest); err != nil {
+	userId, err := token.ExtractUserId(c.Request())
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, Response{
-			Message: fmt.Errorf("invalid data").Error(),
+			Message: fmt.Errorf("invalid user").Error(),
 		})
 	}
 
-	err := r.service.ClockIn(context.Background(), registerRequest.ToClockInRegister())
+	err = r.service.ClockIn(context.Background(), userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),

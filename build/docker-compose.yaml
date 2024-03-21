@@ -1,8 +1,8 @@
 version: '3.7'
 services:
 
-  mongodb:
-    container_name: container-mongodb
+  register-mongo:
+    container_name: register-mongo
     image: mongo:latest
     environment:
       MONGO_INITDB_ROOT_USERNAME: root

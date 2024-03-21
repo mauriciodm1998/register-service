@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
-	"register-service/internal/domain"
 )
 
 type RegisterService interface {
-	ClockIn(ctx context.Context, status *domain.ClockInRegister) error
+	ClockIn(ctx context.Context, userId string) error
 }
 
 func NewRegisterService() RegisterService {
