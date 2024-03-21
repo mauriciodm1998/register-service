@@ -43,7 +43,7 @@ func returnSecretKey(token *jwt.Token) (interface{}, error) {
 	return []byte(config.Get().Token.Key), nil
 }
 
-func ExtractUserId(request *http.Request) (string, error) {
+func ExtractUserId(request *http.Request) (int, error) {
 	tokenS, err := jwt.Parse(getToken(request), func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("invalid jwt")
@@ -52,8 +52,8 @@ func ExtractUserId(request *http.Request) (string, error) {
 		return []byte(config.Get().Token.Key), nil
 	})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return tokenS.Claims.(jwt.MapClaims)["userId"].(string), nil
+	return tokenS.Claims.(jwt.MapClaims)["userId"].(int), nil
 }

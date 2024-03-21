@@ -10,3 +10,8 @@ type ClockInRegister struct {
 	CreatedAt time.Time `bson:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at"`
 }
+
+type DailyRegister struct {
+	Clocks []ClockInRegister
+	Hours  int
+}

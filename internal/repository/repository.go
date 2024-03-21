@@ -23,6 +23,7 @@ type Repository interface {
 	Create(ctx context.Context, register domain.ClockInRegister) error
 	GetDayAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error)
 	GetMonthAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error)
+	GetWeekAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error)
 }
 
 type repository struct {
@@ -41,8 +42,6 @@ func New() Repository {
 }
 
 func (r *repository) Create(ctx context.Context, register domain.ClockInRegister) error {
-	register.Time = register.Time.Truncate(60 * time.Minute)
-
 	_, err := r.collection.InsertOne(ctx, register)
 	if err != nil {
 		return err
@@ -94,6 +93,41 @@ func (r *repository) GetDayAppointments(ctx context.Context, userId int, target 
 		"$and": []bson.M{
 			{
 				"date": target,
+			},
+			{
+				"user_id": userId,
+			},
+		},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var registers []domain.ClockInRegister
+
+	if err = cursor.All(ctx, &registers); err != nil {
+		return nil, err
+	}
+
+	return registers, nil
+}
+
+func (r *repository) GetWeekAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error) {
+	start := target.AddDate(0, 0, -int(target.Weekday()))
+
+	filter := bson.M{
+		"$and": []bson.M{
+			{
+				"date": bson.M{
+					"$gte": start,
+				},
+			},
+			{
+				"date": bson.M{
+					"$lte": target,
+				},
 			},
 			{
 				"user_id": userId,
