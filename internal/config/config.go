@@ -21,6 +21,11 @@ type config struct {
 	Token struct {
 		Key string `cfg:"key"`
 	} `cfg:"token"`
+	SQS struct {
+		ClockInQueue string `cfg:"clock_in_queue"`
+		Region       string `cfg:"region"`
+		Endpoint     string `cfg:"endpoint"`
+	} `cfg:"sqs"`
 }
 
 func Get() config {

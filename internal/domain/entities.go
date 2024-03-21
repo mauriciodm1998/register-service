@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type ClockInRegister struct {
-	Id        int       `bson:"_id"`
+	Id        string    `bson:"_id"`
 	UserId    int       `bson:"user_id"`
 	Date      time.Time `bson:"date"`
 	Time      time.Time `bson:"time"`
