@@ -6,19 +6,14 @@ import (
 	"register-service/internal/token"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 func Logger(fx echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		log := logrus.WithContext(context.Background())
+		log.Logger.WithContext(context.Background())
 		request := ctx.Request()
-		log.WithFields(logrus.Fields{
-			"Host":   request.Host,
-			"URI":    request.RequestURI,
-			"Method": request.Method,
-		}).Info()
-
+		log.Info().Msgf("Host: %s, URI: %s, Method: %s", request.Host, request.RequestURI, request.Method)
 		return fx(ctx)
 	}
 }

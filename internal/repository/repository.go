@@ -7,6 +7,8 @@ import (
 	"register-service/internal/domain"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -30,7 +32,7 @@ type repository struct {
 func New() Repository {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Get().Database.ConnectionString))
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err).Msg("error when connect to the database")
 	}
 
 	return &repository{

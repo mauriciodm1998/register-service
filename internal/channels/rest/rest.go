@@ -2,6 +2,7 @@ package rest
 
 import (
 	"register-service/internal/config"
+	"register-service/internal/middlewares"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,7 +26,9 @@ func (r rest) Start() error {
 	mainGroup := router.Group("/api")
 	registerGroup := mainGroup.Group("/clock-in")
 	registerGroup.POST("/", r.register.ClockIn)
-	//registerGroup.Use(middlewares.Authorization)
+
+	registerGroup.Use(middlewares.Authorization)
+	registerGroup.Use(middlewares.Logger)
 
 	return router.Start(":" + config.Get().Server.Port)
 }
