@@ -7,3 +7,4 @@ run-local-stack:
 create-queue:
 	awslocal kinesis list-streams
 	awslocal sqs create-queue --queue-name clock_in_register
+	awslocal sqs create-queue --queue-name month_report_requests

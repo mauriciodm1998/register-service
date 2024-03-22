@@ -21,8 +21,14 @@ type config struct {
 	Token struct {
 		Key string `cfg:"key"`
 	} `cfg:"token"`
+	Mailer struct {
+		From    string `cfg:"from"`
+		Pwd     string `cfg:"pwd"`
+		Address string `cfg:"address"`
+	} `cfg:"mailer"`
 	SQS struct {
 		ClockInQueue string `cfg:"clock_in_queue"`
+		ReportQueue  string `cfg:"report_queue"`
 		Region       string `cfg:"region"`
 		Endpoint     string `cfg:"endpoint"`
 	} `cfg:"sqs"`

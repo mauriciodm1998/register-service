@@ -4,7 +4,7 @@ import (
 	"register-service/internal/domain"
 )
 
-func toResponse2(weekReports []domain.DailyRegister) []ResponseAppointments {
+func toResponses(weekReports []domain.DailyRegister) []ResponseAppointments {
 	result := []ResponseAppointments{}
 
 	for _, register := range weekReports {

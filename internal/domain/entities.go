@@ -15,3 +15,9 @@ type DailyRegister struct {
 	Clocks []ClockInRegister
 	Hours  int
 }
+
+type MonthReportRequest struct {
+	UserId int
+	Time   time.Time
+	Mail   string
+}

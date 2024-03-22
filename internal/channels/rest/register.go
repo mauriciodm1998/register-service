@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"register-service/internal/channels"
 	"register-service/internal/config"
+	"register-service/internal/integration/mail"
 	"register-service/internal/middlewares"
 	"register-service/internal/service"
 
@@ -15,9 +16,9 @@ type register struct {
 	service service.RegisterService
 }
 
-func NewRegisterChannel() channels.Channel {
+func NewRegisterChannel(mailer mail.Mailer) channels.Channel {
 	return &register{
-		service: service.NewRegisterService(),
+		service: service.NewRegisterService(mailer),
 	}
 }
 
@@ -30,6 +31,7 @@ func (r *register) Start() error {
 	registerGroup.POST("/", r.ClockIn)
 	registerGroup.GET("/", r.GetDayAppointments)
 	registerGroup.GET("/week", r.GetWeekAppointments)
+	registerGroup.GET("/month", r.GetMonthAppointments)
 
 	// registerGroup.Use(middlewares.Authorization)
 	registerGroup.Use(middlewares.Logger)
@@ -88,5 +90,22 @@ func (r *register) GetWeekAppointments(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusOK, toResponse2(weekRegisters))
+	return c.JSON(http.StatusOK, toResponses(weekRegisters))
+}
+
+func (r *register) GetMonthAppointments(c echo.Context) error {
+	// userId, err := token.ExtractUserId(c.Request())
+	// if err != nil {
+	// 	return c.JSON(http.StatusBadRequest, Response{
+	// 		Message: fmt.Errorf("invalid user").Error(),
+	// 	})
+	// }
+
+	err := r.service.GetMonthAppointments(context.Background(), 44456)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Response{
+			Message: err.Error(),
+		})
+	}
+	return c.NoContent(http.StatusCreated)
 }
