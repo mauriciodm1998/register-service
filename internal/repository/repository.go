@@ -18,7 +18,6 @@ import (
 
 const (
 	tableName = "clock_in_register"
-	region    = "us-east-1"
 	index     = "user_id-date-index"
 )
 
@@ -37,7 +36,7 @@ type repository struct {
 
 func New() Repository {
 	cfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
-		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(config.Get().AWS.AccessKeyId, config.Get().AWS.SecretAccessKey, config.Get().AWS.SessionToken)), awsconfig.WithRegion(region),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(config.Get().AWS.AccessKeyId, config.Get().AWS.SecretAccessKey, config.Get().AWS.SessionToken)), awsconfig.WithRegion(config.Get().AWS.Region),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("an error occurred when connect to the database")
