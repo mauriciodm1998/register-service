@@ -2,19 +2,26 @@ name: ci_workflow
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21.x'
-      - name: Install dependencies
-        run: go get ./...
-      - name: Build
-        run: CGO_ENABLED=0 go build -v -o dist/hackaton cmd/client/main.go
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Tests & Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: docker.io/mauricio1998/register-service
+          context: .
+          file: ./build/Dockerfile
