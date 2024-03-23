@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: go get ./...
       - name: Build
-        run: CGO_ENABLED=0 go build -v -o dist/hackaton cmd/client/main.go
+        run: CGO_ENABLED=0 go build -v -o dist/hackaton cmd/register/main.go
       - name: Test
         run: go test -v ./... -coverprofile="c.out"
   sonar:

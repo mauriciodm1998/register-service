@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,3 +24,17 @@ jobs:
           tags: docker.io/mauricio1998/register-service
           context: .
           file: ./build/Dockerfile
+  deploy:
+      name: Deploy
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2.2.0
+        with:
+          fetch-depth: 0
+      - name: Apply manifest
+        uses: notnull-co/kubectl-action@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
+        with:
+          args: kubectl rollout restart deployment register-service-deployment -n hackaton
