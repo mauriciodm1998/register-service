@@ -10,9 +10,4 @@ sqs:
   clock_in_queue: https://sqs.us-east-1.amazonaws.com/851725660206/clock_in_queue
   report_queue: http://sqs.sa-east-1.localhost.localstack.cloud:4566/000000000000/month_report_requests
 mailer:
-  pwd: qxan vysj xblp mrpv
   from: mauriciodmpires1@gmail.com
-AWS:
-  access_key_id: ASIA4MTWOGAXDDYBEGQE
-  secret_access_key: pXhG09mJT/CP1mHyYWMflciet40+xLNxPKlnzfQR
-  session_token: FwoGZXIvYXdzEEgaDPNJBFqgAflurEQ0SiLLAYa1BXHFQKfQeXj67W462fXDYvEXWzkO5LR3ny1eCjJthUZYYQ1XeDQr0S/jzMuOP8LQWDtEAgcnjSpaxyrcCRm0MyH/yIf8yQBakrwNoKR7VHUaGofdYTE0JKKGyGd8jcDwSA1Lei0i1f5TWIq2h01gf3xb0yaNDMx+TOzPh3iwodP7C/sIN4enqewXUvU11ctXE19VphK1nAM14cXjG8bBEqTp0c/oTuqmVcTk3gnbxiGzvmerl+QbQ+qy3EhocZ6W2ANtdgOgsOd4KMOE+K8GMi3EpvpSQVUboq0phI29WJ8ZbIKM95xw8lRooKhkdtV4MNnIdpUBR3bPp+UOGpM=
