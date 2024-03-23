@@ -116,7 +116,7 @@ func (r *repository) GetMonthAppointments(ctx context.Context, userId int, targe
 		},
 	})
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	var appointments []domain.ClockInRegister
@@ -151,7 +151,7 @@ func (r *repository) GetWeekAppointments(ctx context.Context, userId int, target
 		},
 	})
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	var appointments []domain.ClockInRegister
