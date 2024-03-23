@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,8 +30,9 @@ jobs:
       needs: build
       runs-on: ubuntu-latest
       steps:
-      - uses: actions-hub/kubectl@master
+      - name: Apply manifest
+        uses: notnull-co/kubectl-action@master
         env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          KUBE_CONFIG: ${{ secrets.KUBECONFIG }}
         with:
-          args: rollout restart deployment register-service-deployment -n hackaton
+          args: kubectl rollout restart deployment register-service-deployment -n hackaton
