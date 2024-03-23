@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"register-service/internal/config"
 	"register-service/internal/domain"
 	"register-service/internal/integration/mail"
 	"register-service/internal/integration/sqs_publisher"
 	"register-service/internal/repository"
+	"sort"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -119,19 +121,14 @@ func (s *registerService) ReportAppointments(ctx context.Context, reportRequest 
 
 	monthRegisters := s.mountDailyRegister(s.mergeIntoDays(report))
 
-	//report, err := s.repository.SaveReport(ctx, appointments)
-	//if err != nil {
-	//	return err
-	//}
-
 	message, err := s.mailer.MountHTMLBody(struct {
 		ID      int
 		Time    string
-		Message string
+		Message template.HTML
 	}{
 		ID:      reportRequest.UserId,
 		Time:    fmt.Sprintf("%d hours", getMonthTotalTime(monthRegisters)),
-		Message: mountMonthReport(monthRegisters),
+		Message: template.HTML(mountMonthReport(monthRegisters)),
 	})
 	if err != nil {
 		log.Err(err).Any("user_id", reportRequest.UserId).Msg("an error occurred when mount html body")
@@ -156,8 +153,16 @@ func (*registerService) mountDailyRegister(periodAppointments map[string][]domai
 			Hours:  calculeHoursWorked(appointments),
 		}
 
+		sort.Slice(appointments, func(i, j int) bool {
+			return appointments[i].Time.Before(appointments[j].Time)
+		})
+
 		periodRegister = append(periodRegister, dailyRegister)
 	}
+
+	sort.Slice(periodRegister, func(i, j int) bool {
+		return periodRegister[i].Clocks[0].Date.Before(periodRegister[j].Clocks[0].Date)
+	})
 
 	return periodRegister
 }

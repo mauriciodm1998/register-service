@@ -56,14 +56,29 @@ func (sender *mailer) SendEmail(subject string, content string, to []string, cc 
 }
 
 func (m *mailer) MountHTMLBody(params any) (string, error) {
-	t, err := template.ParseFiles("template.html")
+	tmpl, err := template.New("template").Parse(`<!-- template.html -->
+	<!DOCTYPE html>
+	<html>
+	<body>
+		<h3>User: </h3><span>{{.ID}}</span><br/><br/>
+		<h3>Total time: </h3><span>{{.Time}}</span><br/><br/>
+		<table border=1>
+			<tr>
+			  <th>Date</th>
+			  <th>Clock Ins</th>
+			  <th>Time</th>
+		  </tr>
+			{{.Message}}
+		</table>
+	</body>
+	</html>`)
 	if err != nil {
 		return "", err
 	}
 
 	var body bytes.Buffer
 
-	err = t.Execute(&body, params)
+	err = tmpl.Execute(&body, params)
 	if err != nil {
 		return "", err
 	}

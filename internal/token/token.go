@@ -55,5 +55,5 @@ func ExtractTokenValues(request *http.Request) (int, string, error) {
 		return 0, "", err
 	}
 
-	return tokenS.Claims.(jwt.MapClaims)["userId"].(int), tokenS.Claims.(jwt.MapClaims)["email"].(string), nil
+	return int(tokenS.Claims.(jwt.MapClaims)["userId"].(float64)), tokenS.Claims.(jwt.MapClaims)["email"].(string), nil
 }

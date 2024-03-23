@@ -49,6 +49,7 @@ func ParseFromFlags() {
 
 func parse(dirs ...string) {
 	if err := cfg.Load(&configuration,
+		cfg.UseEnv("APP"),
 		cfg.Dirs(dirs...),
 	); err != nil {
 		log.Panic().Err(err)

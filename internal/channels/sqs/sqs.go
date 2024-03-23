@@ -62,6 +62,7 @@ func (q *queueSQS) messageProcessor(clockinChannel chan *sqs.Message, reportChan
 	for {
 		select {
 		case clockMessage := <-clockinChannel:
+			log.Info().Any("msg_id", clockMessage.MessageId).Msg("msg received from clock in queue")
 
 			var clockIn domain.ClockInRegister
 
@@ -80,6 +81,7 @@ func (q *queueSQS) messageProcessor(clockinChannel chan *sqs.Message, reportChan
 			q.deleteMessage(clockMessage, config.Get().SQS.ClockInQueue)
 
 		case reportMessage := <-reportChannel:
+			log.Info().Any("msg_id", reportMessage.MessageId).Msg("msg received from report queue")
 
 			var report domain.MonthReportRequest
 

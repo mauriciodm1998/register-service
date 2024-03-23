@@ -29,14 +29,14 @@ func (r *register) Start() error {
 	mainGroup := router.Group("/api")
 	registerGroup := mainGroup.Group("/clock-in")
 
+	registerGroup.Use(middlewares.Logger)
+	registerGroup.Use(middlewares.Authorization)
+
 	mainGroup.GET("/healthz", r.healthCheck)
 	registerGroup.POST("/", r.ClockIn)
 	registerGroup.GET("/", r.GetDayAppointments)
 	registerGroup.GET("/week", r.GetWeekAppointments)
 	registerGroup.GET("/month", r.GetMonthAppointments)
-
-	registerGroup.Use(middlewares.Authorization)
-	registerGroup.Use(middlewares.Logger)
 
 	return router.Start(":" + config.Get().Server.Port)
 }

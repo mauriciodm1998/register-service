@@ -4,6 +4,7 @@ import (
 	"context"
 	"register-service/internal/config"
 	"register-service/internal/domain"
+	"sort"
 	"strconv"
 	"time"
 
@@ -94,6 +95,8 @@ func (r *repository) GetDayAppointments(ctx context.Context, userId int, target 
 		appointments = append(appointments, appointment)
 	}
 
+	sortTimeResult(appointments)
+
 	return appointments, nil
 }
 
@@ -104,7 +107,7 @@ func (r *repository) GetMonthAppointments(ctx context.Context, userId int, targe
 	result, err := r.database.Query(context.TODO(), &dynamodb.QueryInput{
 		TableName:              aws.String(r.tableName),
 		IndexName:              &r.index,
-		KeyConditionExpression: aws.String("user_id = :id AND #date BETWEEN :end AND :start"),
+		KeyConditionExpression: aws.String("user_id = :id AND #date BETWEEN :start AND :end"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":id":    &types.AttributeValueMemberN{Value: strconv.Itoa(userId)},
 			":start": &types.AttributeValueMemberS{Value: start.Format(time.RFC3339)},
@@ -129,6 +132,8 @@ func (r *repository) GetMonthAppointments(ctx context.Context, userId int, targe
 
 		appointments = append(appointments, appointment)
 	}
+
+	sortTimeResult(appointments)
 
 	return appointments, nil
 }
@@ -165,5 +170,13 @@ func (r *repository) GetWeekAppointments(ctx context.Context, userId int, target
 		appointments = append(appointments, appointment)
 	}
 
+	sortTimeResult(appointments)
+
 	return appointments, nil
+}
+
+func sortTimeResult(appointments []domain.ClockInRegister) {
+	sort.Slice(appointments, func(i, j int) bool {
+		return appointments[i].Time.Before(appointments[j].Time)
+	})
 }
