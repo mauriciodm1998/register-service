@@ -1,0 +1,57 @@
+@startuml
+
+rectangle AWS {
+    rectangle "VPC" {
+
+        rectangle "App Security Group" {
+
+            frame "EKS" as eks{
+                component "Register" <<Service>> as registro {
+                    node "RestAPI" as rest
+                    node "Consumer" as consumer
+                }
+                component "Authentication" <<Service>> as auth
+            }
+
+            queue "SQS" {
+                queue clock_in_registers as registers
+                queue reports as reports
+            }
+
+            database "Dynamo"{
+                folder "Users" <<collection>> as tbusers
+                folder "Registros de Ponto" <<collection>> as tbregistros
+            }
+        }
+
+        rectangle "Load Balancer Security Group" {
+            node "Application\nLoad\nBalancer" as alb
+        }
+        frame "VPC Link" as vpclink {
+            node "VPC Link 1"
+            node "VPC Link 2"
+        }
+        node "VPC Endpoint" as vpcendpoint
+    }
+    node "API Gateway" as apigw
+}
+entity internet
+entity GMail as gmail
+
+internet -right-> apigw
+apigw -right-> vpclink
+vpclink -down-> alb
+vpclink <.up. alb
+alb -right-> eks
+alb <.. eks
+
+auth --> tbusers
+rest -> registers
+rest --> reports
+registers ...> consumer
+reports ..> consumer 
+consumer --> tbregistros
+registro --> vpcendpoint
+vpcendpoint -right-> gmail
+
+@enduml

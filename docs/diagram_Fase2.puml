@@ -1,0 +1,102 @@
+@startuml
+
+rectangle AWS {
+    component "Authentication" <<AWS Cognito>> as auth
+    node "API Gateway" as apigw
+    queue "SNS"{
+        queue email as email
+    }
+    rectangle "VPC" {
+
+        rectangle "Frontend Security Group" as frontsg{
+            rectangle "EKS" as fronteks{
+                component "WebSite" <<WebService>> as site
+                component "BFF" <<Service>> as bff
+            }
+        }
+
+        rectangle "App Security Group" as asg{
+
+            frame "EKS" as eks{
+                component "Register" <<Service>> as registro{
+                    node "Consumer" as consumerreg
+                    node "RestAPI" as restreg
+                }
+
+                component "Report" <<Service>> as report{
+                    node "RestAPI" as restrep
+                    node "Consumer" as consumerrep
+                }
+
+                component "Notification" <<CronJob>> as notification
+                component "User" <<Service>> as user
+            }
+
+            queue "SQS" {
+                queue clock_in_registers as registers
+                queue reports as reports
+            }
+
+
+            database "Dynamo"{
+                folder "Users" <<collection>> as tbusers
+                folder "Registros de Ponto" <<collection>> as tbregistros
+                folder "Registros de Ponto Replica" <<collection>> as tbregistrosrep
+                folder "Solicitacoes" <<collection>> as tbsolicita
+            }
+        }
+
+        rectangle "Load Balancer Security Group" as albsg{
+            node "Application\nLoad\nBalancer" as alb
+        }
+        frame "VPC Link" as vpclink {
+            node "VPC Link 1"
+            node "VPC Link 2"
+        }
+        node "VPC Endpoint" as vpcendpoint
+    }
+
+
+}
+entity internet
+
+internet -> apigw
+internet -left-> auth
+apigw -> vpclink
+vpclink -down-> alb
+vpclink <.up. alb
+
+
+alb -right-> eks
+alb <.right. eks
+
+alb --down--> frontsg
+alb <..down.. frontsg
+
+notification --> user
+user --> tbusers
+
+restreg -> registers
+registers ..> consumerreg
+consumerreg -down-> tbregistros
+
+notification -down--> vpcendpoint
+
+vpcendpoint -right-> email
+
+tbregistros -down-> tbregistrosrep
+
+consumerrep -down-> tbregistrosrep
+restrep -> reports
+reports ..> consumerrep
+consumerrep -down--> vpcendpoint
+
+site -right-> bff
+restreg -> tbregistros
+restrep -> tbregistrosrep
+
+restreg -> tbsolicita
+restreg -> vpcendpoint
+
+
+@enduml
