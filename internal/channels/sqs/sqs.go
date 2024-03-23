@@ -109,7 +109,7 @@ func (q *queueSQS) receiveMessage(queueToListen string, ch chan<- *sqs.Message) 
 
 		resp, err := q.sqsService.ReceiveMessage(paramsOrder)
 		if err != nil {
-			log.Err(err).Msg("an error occurred when receive message from the queue")
+			log.Fatal().Err(err).Msg("an error occurred when receive message from the queue")
 			continue
 		}
 

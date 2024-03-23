@@ -29,6 +29,7 @@ func (r *register) Start() error {
 	mainGroup := router.Group("/api")
 	registerGroup := mainGroup.Group("/clock-in")
 
+	mainGroup.GET("/healthz", r.healthCheck)
 	registerGroup.POST("/", r.ClockIn)
 	registerGroup.GET("/", r.GetDayAppointments)
 	registerGroup.GET("/week", r.GetWeekAppointments)
@@ -38,6 +39,10 @@ func (r *register) Start() error {
 	registerGroup.Use(middlewares.Logger)
 
 	return router.Start(":" + config.Get().Server.Port)
+}
+
+func (r *register) healthCheck(c echo.Context) error {
+	return c.NoContent(http.StatusOK)
 }
 
 func (r *register) ClockIn(c echo.Context) error {
