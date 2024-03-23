@@ -2,11 +2,13 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"register-service/internal/channels"
 	"register-service/internal/config"
 	"register-service/internal/middlewares"
 	"register-service/internal/service"
+	"register-service/internal/token"
 
 	"github.com/labstack/echo/v4"
 )
@@ -32,21 +34,21 @@ func (r *register) Start() error {
 	registerGroup.GET("/week", r.GetWeekAppointments)
 	registerGroup.GET("/month", r.GetMonthAppointments)
 
-	// registerGroup.Use(middlewares.Authorization)
+	registerGroup.Use(middlewares.Authorization)
 	registerGroup.Use(middlewares.Logger)
 
 	return router.Start(":" + config.Get().Server.Port)
 }
 
 func (r *register) ClockIn(c echo.Context) error {
-	// userId, err := token.ExtractUserId(c.Request())
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, Response{
-	// 		Message: fmt.Errorf("invalid user").Error(),
-	// 	})
-	// }
+	userId, _, err := token.ExtractTokenValues(c.Request())
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Response{
+			Message: fmt.Errorf("invalid user").Error(),
+		})
+	}
 
-	err := r.service.ClockIn(context.Background(), 44456)
+	err = r.service.ClockIn(context.Background(), userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),
@@ -57,14 +59,14 @@ func (r *register) ClockIn(c echo.Context) error {
 }
 
 func (r *register) GetDayAppointments(c echo.Context) error {
-	// userId, err := token.ExtractUserId(c.Request())
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, Response{
-	// 		Message: fmt.Errorf("invalid user").Error(),
-	// 	})
-	// }
+	userId, _, err := token.ExtractTokenValues(c.Request())
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Response{
+			Message: fmt.Errorf("invalid user").Error(),
+		})
+	}
 
-	dailyRegisters, err := r.service.GetDayAppointments(context.Background(), 44456)
+	dailyRegisters, err := r.service.GetDayAppointments(context.Background(), userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),
@@ -75,14 +77,14 @@ func (r *register) GetDayAppointments(c echo.Context) error {
 }
 
 func (r *register) GetWeekAppointments(c echo.Context) error {
-	// userId, err := token.ExtractUserId(c.Request())
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, Response{
-	// 		Message: fmt.Errorf("invalid user").Error(),
-	// 	})
-	// }
+	userId, _, err := token.ExtractTokenValues(c.Request())
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Response{
+			Message: fmt.Errorf("invalid user").Error(),
+		})
+	}
 
-	weekRegisters, err := r.service.GetWeekAppointments(context.Background(), 44456)
+	weekRegisters, err := r.service.GetWeekAppointments(context.Background(), userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),
@@ -93,18 +95,19 @@ func (r *register) GetWeekAppointments(c echo.Context) error {
 }
 
 func (r *register) GetMonthAppointments(c echo.Context) error {
-	// userId, err := token.ExtractUserId(c.Request())
-	// if err != nil {
-	// 	return c.JSON(http.StatusBadRequest, Response{
-	// 		Message: fmt.Errorf("invalid user").Error(),
-	// 	})
-	// }
+	userId, email, err := token.ExtractTokenValues(c.Request())
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Response{
+			Message: fmt.Errorf("invalid user").Error(),
+		})
+	}
 
-	err := r.service.GetMonthAppointments(context.Background(), 44456, "mauriciodmpires1@gmail.com")
+	err = r.service.GetMonthAppointments(context.Background(), userId, email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),
 		})
 	}
+
 	return c.NoContent(http.StatusCreated)
 }

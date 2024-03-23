@@ -19,6 +19,7 @@ import (
 const (
 	tableName = "clock_in_register"
 	region    = "us-east-1"
+	index     = "user_id-date-index"
 )
 
 type Repository interface {
@@ -44,7 +45,7 @@ func New() Repository {
 	return &repository{
 		database:  dynamodb.NewFromConfig(cfg),
 		tableName: tableName,
-		index:     "user_id-date-index",
+		index:     index,
 	}
 }
 
@@ -79,7 +80,7 @@ func (r *repository) GetDayAppointments(ctx context.Context, userId int, target 
 		},
 	})
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	var appointments []domain.ClockInRegister

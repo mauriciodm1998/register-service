@@ -43,22 +43,15 @@ func (s *registerService) ClockIn(ctx context.Context, userId int) error {
 		domain.ClockInRegister{
 			Id:        uuid.New().String(),
 			UserId:    userId,
-			Date:      time.Date(2024, time.March, 22, 0, 0, 0, 0, time.UTC),
-			Time:      time.Date(2024, time.March, 22, 9, 0, 0, 0, time.UTC),
+			Date:      time.Now().Truncate(24 * time.Hour).UTC(),
+			Time:      time.Now().UTC(),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		// domain.ClockInRegister{
-		// 	Id:        uuid.New().String(),
-		// 	UserId:    userId,
-		// 	Date:      time.Now().Truncate(24 * time.Hour).UTC(),
-		// 	Time:      time.Now().UTC(),
-		// 	CreatedAt: time.Now(),
-		// UpdatedAt: time.Now(),
-		// },
 		config.Get().SQS.ClockInQueue,
 	); err != nil {
-		return fmt.Errorf("an error occurred when sending clock in to queue: %w", err)
+		log.Err(err).Any("user_id", userId).Msg("an error occurred when publishe the message in queue")
+		return err
 	}
 
 	return nil
@@ -78,6 +71,7 @@ func (s *registerService) QueueToDatabase(ctx context.Context, register domain.C
 func (s *registerService) GetDayAppointments(ctx context.Context, userId int) (*domain.DailyRegister, error) {
 	appointments, err := s.repository.GetDayAppointments(ctx, userId, time.Now().Truncate(24*time.Hour).UTC())
 	if err != nil {
+		log.Err(err).Any("user_id", userId).Msg("an error occurred when get day appointments")
 		return nil, err
 	}
 
@@ -90,6 +84,7 @@ func (s *registerService) GetDayAppointments(ctx context.Context, userId int) (*
 func (s *registerService) GetWeekAppointments(ctx context.Context, userId int) ([]domain.DailyRegister, error) {
 	appointments, err := s.repository.GetWeekAppointments(ctx, userId, time.Now().Truncate(24*time.Hour).UTC())
 	if err != nil {
+		log.Err(err).Any("user_id", userId).Msg("an error occurred when get week appointments")
 		return nil, err
 	}
 
@@ -104,7 +99,8 @@ func (s *registerService) GetMonthAppointments(ctx context.Context, userId int, 
 	}
 
 	if err := s.publisher.SendMessage(report, config.Get().SQS.ReportQueue); err != nil {
-		return fmt.Errorf("an error occurred when sending report to queue: %w", err)
+		log.Err(err).Any("user_id", userId).Msg("an error occurred when publishe the message in queue")
+		return err
 	}
 
 	return nil
@@ -117,6 +113,7 @@ func (s *registerService) ReportAppointments(ctx context.Context, reportRequest 
 
 	report, err := s.repository.GetMonthAppointments(ctx, reportRequest.UserId, reportRequest.Time)
 	if err != nil {
+		log.Err(err).Any("user_id", reportRequest.UserId).Msg("an error occurred when get month appointments")
 		return err
 	}
 
@@ -137,10 +134,12 @@ func (s *registerService) ReportAppointments(ctx context.Context, reportRequest 
 		Message: mountMonthReport(monthRegisters),
 	})
 	if err != nil {
+		log.Err(err).Any("user_id", reportRequest.UserId).Msg("an error occurred when mount html body")
 		return err
 	}
 
 	if err = s.mailer.SendEmail("Month Clock In Report", message, []string{reportRequest.Mail}, nil, nil, nil); err != nil {
+		log.Err(err).Any("user_id", reportRequest.UserId).Msg("an error occurred when send email")
 		return err
 	}
 
@@ -187,10 +186,10 @@ func mountMonthReport(registers []domain.DailyRegister) string {
 		var clocks string
 
 		for _, clock := range register.Clocks {
-			clocks += fmt.Sprintf(" (%s) ", clock.Time.String())
+			clocks += fmt.Sprintf(" (%s) ", clock.Time.Format("15:04"))
 		}
 
-		report += fmt.Sprintf("<td>%s</td><td>%s</td><td>%d</td>\n", register.Clocks[0].Date.String(), clocks, register.Hours)
+		report += fmt.Sprintf("<td>%s</td><td>%s</td><td>%d</td>\n", register.Clocks[0].Date.Format("02/01/2006"), clocks, register.Hours)
 		report += "</tr>"
 	}
 

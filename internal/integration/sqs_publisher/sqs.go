@@ -20,8 +20,7 @@ type Publisher interface {
 func NewSQS() Publisher {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
-			Endpoint:   aws.String(config.Get().SQS.Endpoint),
-			Region:     aws.String(config.Get().SQS.Region),
+			Region:     aws.String(config.Get().AWS.Region),
 			DisableSSL: aws.Bool(true),
 		},
 	}))

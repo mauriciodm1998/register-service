@@ -22,28 +22,23 @@ var (
 )
 
 type queueSQS struct {
-	sqsService     *sqs.SQS
-	service        service.RegisterService
-	queueProcessor map[string]func(queue string, ch chan *sqs.Message)
+	sqsService *sqs.SQS
+	service    service.RegisterService
 }
 
 func NewSQS() channels.Channel {
 	once.Do(func() {
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
 			Config: aws.Config{
-				Region:     aws.String(config.Get().SQS.Region),
+				Region:     aws.String(config.Get().AWS.Region),
 				DisableSSL: aws.Bool(true),
 			},
 		}))
 
 		sqs := &queueSQS{
-			sqsService:     sqs.New(sess),
-			service:        service.NewRegisterService(),
-			queueProcessor: make(map[string]func(queue string, ch chan *sqs.Message)),
+			sqsService: sqs.New(sess),
+			service:    service.NewRegisterService(),
 		}
-
-		// sqs.queueProcessor[config.Get().SQS.ClockInQueue] = sqs.processClockInMessage
-		// sqs.queueProcessor[config.Get().SQS.ReportQueue] = sqs.processReportMessage
 
 		instance = sqs
 	})
@@ -56,7 +51,7 @@ func (q *queueSQS) Start() error {
 	reportChannel := make(chan *sqs.Message)
 
 	go q.receiveMessage(config.Get().SQS.ClockInQueue, clockinChannel)
-	// go q.receiveMessage(config.Get().SQS.ReportQueue, reportChannel)
+	go q.receiveMessage(config.Get().SQS.ReportQueue, reportChannel)
 
 	q.messageProcessor(clockinChannel, reportChannel)
 
@@ -128,64 +123,6 @@ func (q *queueSQS) receiveMessage(queueToListen string, ch chan<- *sqs.Message) 
 		}
 	}
 }
-
-// func (q *queueSQS) processClockInMessage(queue string, ch chan *sqs.Message) {
-// 	for {
-// 		msg := <-ch
-// 		var clockIn domain.ClockInRegister
-
-// 		err := json.Unmarshal([]byte(*msg.Body), &clockIn)
-// 		if err != nil {
-// 			log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when reading message")
-// 			continue
-// 		}
-
-// 		err = q.service.QueueToDatabase(context.Background(), clockIn)
-// 		if err != nil {
-// 			log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when processing message")
-// 			continue
-// 		}
-// 		q.deleteMessage(msg, queue)
-// 	}
-// }
-
-// func (q *queueSQS) processClockInMessage(queue string, ch chan *sqs.Message) {
-// 	msg := <-ch
-// 	var clockIn domain.ClockInRegister
-
-// 	err := json.Unmarshal([]byte(*msg.Body), &clockIn)
-// 	if err != nil {
-// 		log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when reading message")
-// 		continue
-// 	}
-
-// 	err = q.service.QueueToDatabase(context.Background(), clockIn)
-// 	if err != nil {
-// 		log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when processing message")
-// 		continue
-// 	}
-// 	q.deleteMessage(msg, queue)
-// }
-
-// func (q *queueSQS) processReportMessage(queue string, ch chan *sqs.Message) {
-// 	for {
-// 		msg := <-ch
-// 		var report domain.MonthReportRequest
-
-// 		err := json.Unmarshal([]byte(*msg.Body), &report)
-// 		if err != nil {
-// 			log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when reading message")
-// 			continue
-// 		}
-
-// 		err = q.service.ReportAppointments(context.Background(), report)
-// 		if err != nil {
-// 			log.Err(err).Any("msg_id", msg.MessageId).Msg("an error occurred when processing message")
-// 			continue
-// 		}
-// 		q.deleteMessage(msg, queue)
-// 	}
-// }
 
 func (q *queueSQS) deleteMessage(msg *sqs.Message, queue string) {
 	_, err := q.sqsService.DeleteMessage(&sqs.DeleteMessageInput{

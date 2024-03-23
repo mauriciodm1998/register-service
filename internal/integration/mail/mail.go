@@ -29,7 +29,7 @@ type mailer struct {
 
 func NewMailer() Mailer {
 	return &mailer{
-		name:        "",
+		name:        "Hackaton FIAP",
 		from:        config.Get().Mailer.From,
 		password:    config.Get().Mailer.Pwd,
 		smtpAddress: smtpAuthAddress,

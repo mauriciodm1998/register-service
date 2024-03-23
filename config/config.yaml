@@ -1,13 +1,7 @@
 server:
   port: 3000
-database:
-  connection_string: mongodb://root:password@0.0.0.0:27017/
 token:
-  key: ""
+  key: "uk5RAK5cumPZZ3jIuKGMn019wXYz4kad"
 sqs:
-  endpoint: "https://sqs.us-east-1.amazonaws.com/851725660206/clock_in_queue"
-  region: us-east-1
   clock_in_queue: https://sqs.us-east-1.amazonaws.com/851725660206/clock_in_queue
   report_queue: http://sqs.sa-east-1.localhost.localstack.cloud:4566/000000000000/month_report_requests
-mailer:
-  from: mauriciodmpires1@gmail.com
