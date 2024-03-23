@@ -22,9 +22,8 @@ type config struct {
 		Key string `cfg:"key"`
 	} `cfg:"token"`
 	Mailer struct {
-		From    string `cfg:"from"`
-		Pwd     string `cfg:"pwd"`
-		Address string `cfg:"address"`
+		From string `cfg:"from"`
+		Pwd  string `cfg:"pwd"`
 	} `cfg:"mailer"`
 	SQS struct {
 		ClockInQueue string `cfg:"clock_in_queue"`
@@ -32,6 +31,11 @@ type config struct {
 		Region       string `cfg:"region"`
 		Endpoint     string `cfg:"endpoint"`
 	} `cfg:"sqs"`
+	AWS struct {
+		AccessKeyId     string `cfg:"access_key_id"`
+		SecretAccessKey string `cfg:"secret_access_key"`
+		SessionToken    string `cfg:"session_token"`
+	}
 }
 
 func Get() config {

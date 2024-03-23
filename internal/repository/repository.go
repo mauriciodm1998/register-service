@@ -2,21 +2,23 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"register-service/internal/config"
 	"register-service/internal/domain"
+	"strconv"
 	"time"
 
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/rs/zerolog/log"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
-	collection = "clock_in_register"
-	database   = "default"
+	tableName = "clock_in_register"
+	region    = "us-east-1"
 )
 
 type Repository interface {
@@ -27,22 +29,35 @@ type Repository interface {
 }
 
 type repository struct {
-	collection *mongo.Collection
+	database  *dynamodb.Client
+	tableName string
+	index     string
 }
 
 func New() Repository {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Get().Database.ConnectionString))
+	cfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(config.Get().AWS.AccessKeyId, config.Get().AWS.SecretAccessKey, config.Get().AWS.SessionToken)), awsconfig.WithRegion(region),
+	)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error when connect to the database")
+		log.Fatal().Err(err).Msg("an error occurred when connect to the database")
 	}
-
 	return &repository{
-		collection: client.Database(database).Collection(collection),
+		database:  dynamodb.NewFromConfig(cfg),
+		tableName: tableName,
+		index:     "user_id-date-index",
 	}
 }
 
 func (r *repository) Create(ctx context.Context, register domain.ClockInRegister) error {
-	_, err := r.collection.InsertOne(ctx, register)
+	av, err := attributevalue.MarshalMap(register)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.database.PutItem(ctx, &dynamodb.PutItemInput{
+		Item:      av,
+		TableName: &r.tableName,
+	})
 	if err != nil {
 		return err
 	}
@@ -50,101 +65,105 @@ func (r *repository) Create(ctx context.Context, register domain.ClockInRegister
 	return nil
 }
 
+func (r *repository) GetDayAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error) {
+	result, err := r.database.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String(r.tableName),
+		IndexName:              &r.index,
+		KeyConditionExpression: aws.String("user_id = :id AND #date = :date"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":id":   &types.AttributeValueMemberN{Value: strconv.Itoa(userId)},
+			":date": &types.AttributeValueMemberS{Value: target.Format(time.RFC3339)},
+		},
+		ExpressionAttributeNames: map[string]string{
+			"#date": "date",
+		},
+	})
+	if err != nil {
+		return nil, nil
+	}
+
+	var appointments []domain.ClockInRegister
+
+	for _, item := range result.Items {
+		var appointment domain.ClockInRegister
+
+		if err := attributevalue.UnmarshalMap(item, &appointment); err != nil {
+			return nil, err
+		}
+
+		appointments = append(appointments, appointment)
+	}
+
+	return appointments, nil
+}
+
 func (r *repository) GetMonthAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error) {
 	start := time.Date(target.Year(), target.Month()-1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.AddDate(0, 1, -1)
 
-	fmt.Println(start.String())
-	fmt.Println(end.String())
-	filter := bson.M{
-		"$and": []bson.M{
-			{
-				"date": bson.M{
-					"$gte": start,
-				},
-			},
-			{
-				"date": bson.M{
-					"$lte": end,
-				},
-			},
-			{
-				"user_id": userId,
-			},
+	result, err := r.database.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String(r.tableName),
+		IndexName:              &r.index,
+		KeyConditionExpression: aws.String("user_id = :id AND #date BETWEEN :end AND :start"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":id":    &types.AttributeValueMemberN{Value: strconv.Itoa(userId)},
+			":start": &types.AttributeValueMemberS{Value: start.Format(time.RFC3339)},
+			":end":   &types.AttributeValueMemberS{Value: end.Format(time.RFC3339)},
 		},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	var registers []domain.ClockInRegister
-
-	if err = cursor.All(ctx, &registers); err != nil {
-		return nil, err
-	}
-
-	return registers, nil
-}
-
-func (r *repository) GetDayAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error) {
-	filter := bson.M{
-		"$and": []bson.M{
-			{
-				"date": target,
-			},
-			{
-				"user_id": userId,
-			},
+		ExpressionAttributeNames: map[string]string{
+			"#date": "date",
 		},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
+	})
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
-	var registers []domain.ClockInRegister
+	var appointments []domain.ClockInRegister
 
-	if err = cursor.All(ctx, &registers); err != nil {
-		return nil, err
+	for _, item := range result.Items {
+		var appointment domain.ClockInRegister
+
+		if err := attributevalue.UnmarshalMap(item, &appointment); err != nil {
+			return nil, err
+		}
+
+		appointments = append(appointments, appointment)
 	}
 
-	return registers, nil
+	return appointments, nil
 }
 
 func (r *repository) GetWeekAppointments(ctx context.Context, userId int, target time.Time) ([]domain.ClockInRegister, error) {
 	start := target.AddDate(0, 0, -int(target.Weekday()))
 
-	filter := bson.M{
-		"$and": []bson.M{
-			{
-				"date": bson.M{
-					"$gte": start,
-				},
-			},
-			{
-				"date": bson.M{
-					"$lte": target,
-				},
-			},
-			{
-				"user_id": userId,
-			},
+	result, err := r.database.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String(r.tableName),
+		IndexName:              &r.index,
+		KeyConditionExpression: aws.String("user_id = :id AND #date BETWEEN :start AND :target"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":id":     &types.AttributeValueMemberN{Value: strconv.Itoa(userId)},
+			":start":  &types.AttributeValueMemberS{Value: start.Format(time.RFC3339)},
+			":target": &types.AttributeValueMemberS{Value: target.Format(time.RFC3339)},
 		},
-	}
-
-	cursor, err := r.collection.Find(ctx, filter)
+		ExpressionAttributeNames: map[string]string{
+			"#date": "date",
+		},
+	})
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
-	var registers []domain.ClockInRegister
+	var appointments []domain.ClockInRegister
 
-	if err = cursor.All(ctx, &registers); err != nil {
-		return nil, err
+	for _, item := range result.Items {
+		var appointment domain.ClockInRegister
+
+		if err := attributevalue.UnmarshalMap(item, &appointment); err != nil {
+			return nil, err
+		}
+
+		appointments = append(appointments, appointment)
 	}
 
-	return registers, nil
+	return appointments, nil
 }

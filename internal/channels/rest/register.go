@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"register-service/internal/channels"
 	"register-service/internal/config"
-	"register-service/internal/integration/mail"
 	"register-service/internal/middlewares"
 	"register-service/internal/service"
 
@@ -16,9 +15,9 @@ type register struct {
 	service service.RegisterService
 }
 
-func NewRegisterChannel(mailer mail.Mailer) channels.Channel {
+func NewRegisterChannel() channels.Channel {
 	return &register{
-		service: service.NewRegisterService(mailer),
+		service: service.NewRegisterService(),
 	}
 }
 
@@ -101,7 +100,7 @@ func (r *register) GetMonthAppointments(c echo.Context) error {
 	// 	})
 	// }
 
-	err := r.service.GetMonthAppointments(context.Background(), 44456)
+	err := r.service.GetMonthAppointments(context.Background(), 44456, "mauriciodmpires1@gmail.com")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Response{
 			Message: err.Error(),
