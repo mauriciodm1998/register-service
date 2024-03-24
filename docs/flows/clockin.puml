@@ -1,0 +1,16 @@
+@startuml clock in flow
+
+actor           user                as user
+participant     register_service    as registersvc
+queue           clock_in_queue      as clockinqueue
+database        clock_in_tb         as clockindb
+
+
+user -> registersvc : request clock in
+registersvc -> registersvc : extract user id from token
+registersvc -> clockinqueue : send request to queue
+registersvc -> user : response ok
+registersvc <-- clockinqueue : listen requests
+registersvc -> clockindb : save clock in
+
+@enduml

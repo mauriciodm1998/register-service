@@ -1,0 +1,19 @@
+@startuml clock in flow
+
+actor           user                    as user
+participant     register_service        as registersvc
+queue           month_report_requests   as monthreportqueue
+database        clock_in_tb             as clockindb
+participant     smtp                    as smtp
+
+user -> registersvc : request month report
+registersvc -> registersvc : extract user id and email from token
+registersvc -> monthreportqueue : send request to queue
+registersvc -> user : response ok
+registersvc <-- monthreportqueue : listen to requests
+registersvc -> clockindb : extract month report
+clockindb -> registersvc : response data
+registersvc -> smtp : send email with month report to requester
+smtp -> user : send email
+
+@enduml

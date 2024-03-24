@@ -1,0 +1,13 @@
+@startuml clock in flow
+
+actor           user                as user
+participant     register_service    as registersvc
+database        clock_in_tb         as clockindb
+
+user -> registersvc : get day/week clock ins
+registersvc -> registersvc : extract user id from token
+registersvc -> clockindb : get day/week clock ins
+clockindb -> registersvc : response day/week clock ins
+registersvc -> user : response day/week clock ins
+
+@enduml
