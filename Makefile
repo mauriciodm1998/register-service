@@ -16,3 +16,8 @@ test-build-bake:
 
 docker-push:
 	docker push docker.io/mauricio1998/register-service
+
+local-infra: run-db run-local-stack create-queue
+
+local-run: local-infra test-build-bake
+

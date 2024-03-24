@@ -1,19 +1,34 @@
-# HACKATON - Software Architecture
+# HACKATON - Software Architecture - Register Servicega
 
 # Description
 
+Register Service é um microserviço que permite ao usuario registrar seu controle de ponto, consultar os pontos do dia e da semana, e permite que o usuário receba via e-mail um relatório com os apontamentos do mês anterior. Este serviço não precisa receber nenhum dado específico em seus endpoints, apenas um token pertencente ao usuário correto. 
+
+
 # Features
+
+- Register Clock In
+- Get Day Clock Ins
+- Get current week clock ins
+- Receive past month report
 
 ## How To Run Locally
 
+```shell
+make local-run
+```
 
+### Local Infra
+
+
+```shell
+make local-infra
+```
 
 ### VSCode - Debug
 The launch.json file is already configured for debuging. Just hit F5 and be happy. (Local Infra needed to complete experience)
 
-### Local Infra
 
-You can use a local infra to run your application, just following the steps:
 
 ## Architecture
 
