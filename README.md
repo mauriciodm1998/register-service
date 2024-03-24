@@ -1,4 +1,4 @@
-# HACKATON - Software Architecture - Register Servicega
+# HACKATON - Software Architecture - Register Service
 
 ## Integrantes Grupo 4
 
@@ -33,7 +33,11 @@ The launch.json file is already configured for debuging. Just hit F5 and be happ
 
 ## Architecture
 
-Nós escolhemos a arquitetura baseada em microserviços utilizando eventos para os dois designs (MVP e Fase 2) como os diagramas abaixo demonstram. A escolha foi feita por diversos motivos, dentre eles:
+- Diagrama da arquitetura da solução MVP pode ser encontrado [aqui](./docs/out/docs/diagrams/diagram_MVP/diagram_MVP.png).
+- Diagrama da arquitetura da solução evolutiva pode ser encontrado [aqui](./docs/out/docs/diagrams/diagram_Fase2/diagram_Fase2.png).
+- Diagramas de fluxo são encontrados [aqui](./docs/out/docs/flows/)
+
+Nós escolhemos a arquitetura baseada em microserviços utilizando eventos para os dois designs (MVP e Fase 2) como os diagramas acima demonstram. A escolha foi feita por diversos motivos, dentre eles:
 
 - Escalabilidade, a maioria dos componentes da arquitetura pode escalar acima ou abaixo tanto vertical quanto horizontalmente, automaticamente sob demanda sem gerar impactos no atendimendo da regra de negócio.
 - Resiliência, se um microserviço falhar o impacto não será generalizado pois os demais serviços que nao dependem dele, continuarão funcionando.
