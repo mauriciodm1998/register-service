@@ -1,9 +1,13 @@
 # HACKATON - Software Architecture - Register Servicega
 
+## Integrantes Grupo 4
+
+- Lucas Arce Ruiz - RM349580
+- Mauricio Gonçalves Pires Jr - RM349581
+
 # Description
 
 Register Service é um microserviço que permite ao usuario registrar seu controle de ponto, consultar os pontos do dia e da semana, e permite que o usuário receba via e-mail um relatório com os apontamentos do mês anterior. Este serviço não precisa receber nenhum dado específico em seus endpoints, apenas um token pertencente ao usuário correto. 
-
 
 # Features
 
@@ -20,15 +24,12 @@ make local-run
 
 ### Local Infra
 
-
 ```shell
 make local-infra
 ```
 
 ### VSCode - Debug
 The launch.json file is already configured for debuging. Just hit F5 and be happy. (Local Infra needed to complete experience)
-
-
 
 ## Architecture
 
